@@ -6,40 +6,11 @@
 
 #include <android/log.h>
 
+#include <UsbCameraViewer/androidlogbuffer.h>
 #include <UsbCameraViewer.h>
 
 using namespace std;
-
-class android_log_buffer: public streambuf
-{
-public:
-    android_log_buffer( ostream& stream, android_LogPriority priority = ANDROID_LOG_DEBUG ) :
-            streambuf(), _buffer(1024), _stream(stream), _orig(stream.rdbuf()), _priority(priority)
-    {
-        setp(&_buffer.front(), &_buffer.back() + 1);
-        _stream.rdbuf(this);
-    }
-    virtual ~android_log_buffer()
-    {
-        _stream.rdbuf(_orig);
-    }
-
-    virtual int sync()
-    {
-        __android_log_print(_priority, "UsbCameraViewer", "%s", pbase());
-        pbump(-(pptr() - pbase()));
-        for ( auto &b : _buffer )
-        {
-            b = 0;
-        }
-        return 0;
-    }
-private:
-    vector<char> _buffer;
-    ostream& _stream;
-    streambuf* _orig = nullptr;
-    android_LogPriority _priority;
-};
+using namespace usbcv;
 
 shared_ptr<streambuf> _error, _debug;
 
