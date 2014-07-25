@@ -10,19 +10,18 @@ LOCAL_MODULE    := UsbCameraViewer
 
 # LOCAL_CPPFLAGS := -Dcxx_flags
 
-LOCAL_C_INCLUDES :=                        \
-	$(LOCAL_PATH)/libusb                   \
-	$(LOCAL_PATH)/libuvc/include
+LOCAL_C_INCLUDES :=                             \
+	$(LOCAL_PATH)/libusb                        \
+	$(LOCAL_PATH)/libuvc/include                \
 
 LOCAL_SRC_FILES :=                              \
     USBCameraViewer.cpp                         \
     UsbCameraViewer/androidlogbuffer.cpp        \
-    UsbCameraViewer/UvcImage.cpp                \
-    UsbCameraViewer/UvcImageGenerator.cpp       \
+    UsbCameraViewer/UvcImage.cpp
 
-LOCAL_LDLIBS    := -llog -landroid#  -lEGL -lGLESv2 -lz -lOpenSLES
+LOCAL_LDLIBS    := -llog -landroid
 
-LOCAL_STATIC_LIBRARIES := usb1.0 uvc
+#LOCAL_STATIC_LIBRARIES := usb1.0 uvc
 
 include $(BUILD_SHARED_LIBRARY)
 

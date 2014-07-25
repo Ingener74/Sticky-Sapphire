@@ -56,6 +56,7 @@
 #    include $(BUILD_SHARED_LIBRARY)
 
 LOCAL_MODULE := usb1.0
+LOCAL_MODULE_FILENAME := libusb1.0
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/libusb
 

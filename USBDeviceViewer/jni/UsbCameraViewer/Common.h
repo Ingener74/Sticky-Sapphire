@@ -11,10 +11,12 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <thread>
 #include <cstring>
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
+#include <functional>
 
 #include <android/log.h>
 
