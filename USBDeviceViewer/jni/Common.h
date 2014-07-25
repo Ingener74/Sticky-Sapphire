@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <vector>
+#include <future>
 #include <string>
 #include <thread>
 #include <cstring>
@@ -20,6 +21,7 @@
 
 #include <android/log.h>
 
+#include <libusb/libusb.h>
 #include <libuvc/libuvc.h>
 
 #endif /* COMMON_H_ */

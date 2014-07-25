@@ -5,7 +5,7 @@
  *      Author: ingener
  */
 
-#include <UsbCameraViewer/androidlogbuffer.h>
+#include <androidlogbuffer.h>
 
 namespace usbcv
 {

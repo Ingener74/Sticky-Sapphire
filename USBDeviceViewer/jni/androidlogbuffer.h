@@ -8,7 +8,7 @@
 #ifndef ANDROIDLOGBUFFER_H_
 #define ANDROIDLOGBUFFER_H_
 
-#include <UsbCameraViewer/Common.h>
+#include <Common.h>
 
 namespace usbcv
 {

@@ -14,5 +14,7 @@ LOCAL_SRC_FILES :=               \
     libuvc/src/init.c            \
     libuvc/src/misc.c            \
     libuvc/src/stream.c          \
+    
+LOCAL_STATIC_LIBRARIES := usb1.0
 
 include $(BUILD_STATIC_LIBRARY)
