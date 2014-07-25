@@ -28,6 +28,7 @@ void thread_func( promise<exception_ptr>& start, function<void( Image )> onNewIm
 	uvc_context_t * ctx = nullptr;
 	uvc_device_t * dev = nullptr;
 	uvc_device_handle_t * devh = nullptr;
+	uvc_stream_handle *strmh = nullptr;
 	uvc_stream_ctrl_t ctrl;
 
 	try
@@ -43,6 +44,8 @@ void thread_func( promise<exception_ptr>& start, function<void( Image )> onNewIm
 		res = uvc_open( dev, &devh );
 		if ( res < 0 ) runtime_error( "can't open device" );
 
+		res =
+
 		res = uvc_get_stream_ctrl_format_size( devh, &ctrl, UVC_FRAME_FORMAT_YUYV, 640, 480, 30 );
 		if ( res < 0 ) runtime_error( "can't get stream control" );
 
@@ -55,6 +58,9 @@ void thread_func( promise<exception_ptr>& start, function<void( Image )> onNewIm
 		{
 //			this_thread::yield(); /* for exit */
 
+			/*
+			uvc_error_t uvc_stream_get_frame(uvc_stream_handle_t *strmh, uvc_frame_t **frame, int32_t timeout_us)
+			*/
 //			uvc_stream_get_frame()
 
 			Image newImage;
