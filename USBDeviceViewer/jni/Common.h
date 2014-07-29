@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <functional>
 
+#include <jni.h>
 #include <android/log.h>
 
 #include <libusb/libusb.h>

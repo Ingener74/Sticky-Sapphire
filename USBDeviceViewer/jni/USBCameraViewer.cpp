@@ -1,22 +1,17 @@
 #include <Common.h>
 #include <androidlogbuffer.h>
 #include <UsbCameraViewer.h>
+#include <RgbImageViewer.h>
 
 using namespace std;
 using namespace std::placeholders;
 using namespace usbcv;
 
 shared_ptr<streambuf> error_buf, debug_buf;
+shared_ptr<RgbImageViewer> rgbImageViewer;
 thread th;
 
-JavaVM jvm = nullptr;
-
-struct RgbImage
-{
-	int32_t rows;
-	int32_t cols;
-	vector<uint8_t> buffer;
-};
+JavaVM *jvm = nullptr;
 
 jint JNI_OnLoad( JavaVM* vm, void* reserved )
 {
@@ -69,10 +64,9 @@ void thread_func( promise<exception_ptr>& start, function<void( RgbImage )> onNe
 //			this_thread::yield(); /* for exit */
 
 			/*
-			uvc_error_t uvc_stream_get_frame(uvc_stream_handle_t *strmh, uvc_frame_t **frame, int32_t timeout_us)
-			*/
+			 uvc_error_t uvc_stream_get_frame(uvc_stream_handle_t *strmh, uvc_frame_t **frame, int32_t timeout_us)
+			 */
 //			uvc_stream_get_frame()
-
 			RgbImage newImage;
 			onNewImage( newImage );
 		}
