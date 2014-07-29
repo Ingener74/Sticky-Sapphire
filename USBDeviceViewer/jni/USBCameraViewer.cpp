@@ -1,29 +1,34 @@
 #include <Common.h>
 #include <androidlogbuffer.h>
 #include <UsbCameraViewer.h>
+#include <RgbImageViewer.h>
 
 using namespace std;
 using namespace std::placeholders;
 using namespace usbcv;
 
 shared_ptr<streambuf> error_buf, debug_buf;
+shared_ptr<RgbImageViewer> rgbImageViewer;
 thread th;
 
-struct Image
-{
-    int32_t rows;
-    int32_t cols;
-    int32_t bpp;
-    vector<uint8_t> buffer;
-};
+JavaVM *jvm = nullptr;
 
-void drawImage( Image image )
+jint JNI_OnLoad( JavaVM* vm, void* reserved )
 {
-    cout << "draw image " << image.rows << " x " << image.cols << " " << image.bpp << " " << image.buffer.size()
-            << endl;
+    jvm = vm;
+    return JNI_OK;
 }
 
-void thread_func( promise<exception_ptr>& start, function<void( Image )> onNewImage )
+void JNI_OnUnload( JavaVM* vm, void* reserved )
+{
+}
+
+void drawImage( RgbImage image )
+{
+    cout << "draw image " << image.rows << " x " << image.cols << " " << image.buffer.size() << endl;
+}
+
+void thread_func( promise<exception_ptr>& start, function<void( RgbImage )> onNewImage )
 {
     uvc_context_t * ctx = nullptr;
     uvc_device_t * dev = nullptr;
@@ -72,7 +77,7 @@ void thread_func( promise<exception_ptr>& start, function<void( Image )> onNewIm
             res = uvc_any2bgr(frame, bgr);
             if ( res < 0 ) throw runtime_error("can't convert any to bgr");
 
-            Image newImage;
+            RgbImage newImage;
             onNewImage(newImage);
 
             uvc_free_frame(bgr);
@@ -89,7 +94,7 @@ void thread_func( promise<exception_ptr>& start, function<void( Image )> onNewIm
     }
 }
 
-bool start()
+jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer( JNIEnv * jniEnv, jobject self )
 {
     error_buf = make_shared<android_log_buffer>(cerr, ANDROID_LOG_ERROR);
     debug_buf = make_shared<android_log_buffer>(cout);
@@ -114,18 +119,8 @@ bool start()
     }
 }
 
-void stop()
+void Java_com_shnaider_usbcameraviewer_USBCameraViewer_stopUsbCameraViewer( JNIEnv *, jobject )
 {
     error_buf.reset();
     debug_buf.reset();
-}
-
-jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer( JNIEnv * jniEnv, jobject self )
-{
-    return start();
-}
-
-void Java_com_shnaider_usbcameraviewer_USBCameraViewer_stopUsbCameraViewer( JNIEnv *, jobject )
-{
-    stop();
 }
