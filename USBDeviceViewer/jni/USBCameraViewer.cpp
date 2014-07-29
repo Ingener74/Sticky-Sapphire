@@ -9,21 +9,31 @@ using namespace usbcv;
 shared_ptr<streambuf> error_buf, debug_buf;
 thread th;
 
-struct Image
+JavaVM jvm = nullptr;
+
+struct RgbImage
 {
 	int32_t rows;
 	int32_t cols;
-	int32_t bpp;
 	vector<uint8_t> buffer;
 };
 
-void drawImage( Image image )
+jint JNI_OnLoad( JavaVM* vm, void* reserved )
 {
-	cout << "draw image " << image.rows << " x " << image.cols << " " << image.bpp << " " << image.buffer.size()
-			<< endl;
+	jvm = vm;
+	return JNI_OK;
 }
 
-void thread_func( promise<exception_ptr>& start, function<void( Image )> onNewImage )
+void JNI_OnUnload( JavaVM* vm, void* reserved )
+{
+}
+
+void drawImage( RgbImage image )
+{
+	cout << "draw image " << image.rows << " x " << image.cols << " " << image.buffer.size() << endl;
+}
+
+void thread_func( promise<exception_ptr>& start, function<void( RgbImage )> onNewImage )
 {
 	uvc_context_t * ctx = nullptr;
 	uvc_device_t * dev = nullptr;
@@ -63,7 +73,7 @@ void thread_func( promise<exception_ptr>& start, function<void( Image )> onNewIm
 			*/
 //			uvc_stream_get_frame()
 
-			Image newImage;
+			RgbImage newImage;
 			onNewImage( newImage );
 		}
 
@@ -78,7 +88,7 @@ void thread_func( promise<exception_ptr>& start, function<void( Image )> onNewIm
 	}
 }
 
-bool start()
+jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer( JNIEnv * jniEnv, jobject self )
 {
 	error_buf = make_shared<android_log_buffer>( cerr, ANDROID_LOG_ERROR );
 	debug_buf = make_shared<android_log_buffer>( cout );
@@ -103,18 +113,8 @@ bool start()
 	}
 }
 
-void stop()
+void Java_com_shnaider_usbcameraviewer_USBCameraViewer_stopUsbCameraViewer( JNIEnv *, jobject )
 {
 	error_buf.reset();
 	debug_buf.reset();
-}
-
-jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer( JNIEnv * jniEnv, jobject self )
-{
-	return start();
-}
-
-void Java_com_shnaider_usbcameraviewer_USBCameraViewer_stopUsbCameraViewer( JNIEnv *, jobject )
-{
-	stop();
 }
