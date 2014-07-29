@@ -101,6 +101,8 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
 
     try
     {
+        rgbImageViewer = make_shared<RgbImageViewer>(jniEnv, self);
+
         promise<exception_ptr> start_promise;
         auto start = start_promise.get_future();
 
