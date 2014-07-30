@@ -16,10 +16,11 @@ LOCAL_C_INCLUDES :=                    \
 
 LOCAL_SRC_FILES :=                     \
     USBCameraViewer.cpp                \
-    androidlogbuffer.cpp               \
+    AndroidLogBuffer.cpp               \
     RgbImageViewer.cpp                 \
+    Error.cpp                          \
 
-LOCAL_LDLIBS    := -llog -landroid
+LOCAL_LDLIBS    := -llog -landroid -ljnigraphics
 
 LOCAL_STATIC_LIBRARIES := uvc
 

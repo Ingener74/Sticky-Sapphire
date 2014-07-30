@@ -22,6 +22,8 @@ public:
 	void drawRgbImage( RgbImage );
 
 private:
+	JavaVM *jvm = nullptr;
+
 	jobject _object_self;
 	jmethodID _method_drawBitmap;
 };

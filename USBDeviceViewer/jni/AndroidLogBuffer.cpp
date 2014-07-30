@@ -1,28 +1,28 @@
 /*
- * androidlogbuffer.cpp
+ * AndroidLogBuffer.cpp
  *
  *  Created on: Jul 16, 2014
  *      Author: ingener
  */
 
-#include <androidlogbuffer.h>
+#include <AndroidLogBuffer.h>
 
 namespace usbcv
 {
 
-android_log_buffer::android_log_buffer( std::ostream& stream, android_LogPriority priority ) :
+AndroidLogBuffer::AndroidLogBuffer( std::ostream& stream, android_LogPriority priority ) :
         std::streambuf(), _buffer(1024), _stream(stream), _orig(stream.rdbuf()), _priority(priority)
 {
     setp(&_buffer.front(), &_buffer.back() + 1);
     _stream.rdbuf(this);
 }
 
-android_log_buffer::~android_log_buffer()
+AndroidLogBuffer::~AndroidLogBuffer()
 {
     _stream.rdbuf(_orig);
 }
 
-int android_log_buffer::sync()
+int AndroidLogBuffer::sync()
 {
     __android_log_print(_priority, "UsbCameraViewer", "%s", pbase());
     pbump(-(pptr() - pbase()));

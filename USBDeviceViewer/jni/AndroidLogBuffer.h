@@ -1,5 +1,5 @@
 /*
- * androidlogbuffer.h
+ * AndroidLogBuffer.h
  *
  *  Created on: Jul 16, 2014
  *      Author: ingener
@@ -13,11 +13,11 @@
 namespace usbcv
 {
 
-class android_log_buffer: public std::streambuf
+class AndroidLogBuffer: public std::streambuf
 {
 public:
-    android_log_buffer( std::ostream& stream, android_LogPriority priority = ANDROID_LOG_DEBUG );
-    virtual ~android_log_buffer();
+    AndroidLogBuffer( std::ostream& stream, android_LogPriority priority = ANDROID_LOG_DEBUG );
+    virtual ~AndroidLogBuffer();
 
     virtual int sync();
 

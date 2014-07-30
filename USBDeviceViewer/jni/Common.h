@@ -8,12 +8,15 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+//#include <execinfo.h>
+
 #include <memory>
 #include <vector>
 #include <future>
 #include <string>
 #include <thread>
 #include <cstring>
+#include <sstream>
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
@@ -21,6 +24,7 @@
 
 #include <jni.h>
 #include <android/log.h>
+#include <android/bitmap.h>
 
 #include <libusb/libusb.h>
 #include <libuvc/libuvc.h>
