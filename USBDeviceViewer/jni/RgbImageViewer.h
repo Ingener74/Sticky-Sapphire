@@ -14,18 +14,18 @@
 class RgbImageViewer
 {
 public:
-	using Ptr = std::shared_ptr<RgbImageViewer>;
+    using Ptr = std::shared_ptr<RgbImageViewer>;
 
-	RgbImageViewer( JNIEnv * jniEnv, jobject object_self );
-	virtual ~RgbImageViewer();
+    RgbImageViewer( JNIEnv * jniEnv, jobject object_self );
+    virtual ~RgbImageViewer();
 
-	void drawRgbImage( RgbImage );
+    void drawRgbImage( RgbImage );
 
 private:
-	JavaVM *jvm = nullptr;
+    JavaVM *jvm = nullptr;
 
-	jobject _object_self;
-	jmethodID _method_drawBitmap;
+    jobject _object_self;
+    jmethodID _method_drawBitmap;
 };
 
 #endif /* RGBIMAGEVIEWER_H_ */

@@ -377,6 +377,15 @@ uvc_error_t uvc_find_device(
 uvc_error_t uvc_open(
     uvc_device_t *dev,
     uvc_device_handle_t **devh);
+
+/*
+ * For Android
+ */
+uvc_error_t uvc_open_android(
+    uvc_device_t *dev,
+    uvc_device_handle_t **devh,
+    int fd);
+
 void uvc_close(uvc_device_handle_t *devh);
 
 uvc_device_t *uvc_get_device(uvc_device_handle_t *devh);

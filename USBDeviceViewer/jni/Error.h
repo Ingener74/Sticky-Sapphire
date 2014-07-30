@@ -13,13 +13,13 @@
 class Error: public std::runtime_error
 {
 public:
-	Error( const std::string& message ) :
-			runtime_error( message + stacktrace() )
-	{
-	}
-	virtual ~Error() throw () = default;
+    Error( const std::string& message ) :
+            runtime_error(message + stacktrace())
+    {
+    }
+    virtual ~Error() throw () = default;
 
-	static std::string stacktrace();
+    static std::string stacktrace();
 };
 
 #endif /* ERROR_H_ */
