@@ -15,7 +15,7 @@ LOCAL_C_INCLUDES :=                    \
 	$(LOCAL_PATH)/libuvc/include       \
 
 LOCAL_SRC_FILES :=                     \
-    USBCameraViewer.cpp                \
+    UsbCameraViewer.cpp                \
     AndroidLogBuffer.cpp               \
     RgbImageViewer.cpp                 \
     Error.cpp                          \
