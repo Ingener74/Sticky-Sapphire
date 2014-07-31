@@ -1076,56 +1076,108 @@ void usbi_fd_notification(struct libusb_context *ctx)
  * \returns another LIBUSB_ERROR code on other failure
  */
 int API_EXPORTED libusb_open(libusb_device *dev,
-	libusb_device_handle **handle)
+    libusb_device_handle **handle)
 {
-	struct libusb_context *ctx = DEVICE_CTX(dev);
-	struct libusb_device_handle *_handle;
-	size_t priv_size = usbi_backend->device_handle_priv_size;
-	int r;
-	usbi_dbg("open %d.%d", dev->bus_number, dev->device_address);
+    struct libusb_context *ctx = DEVICE_CTX(dev);
+    struct libusb_device_handle *_handle;
+    size_t priv_size = usbi_backend->device_handle_priv_size;
+    int r;
+    usbi_dbg("open %d.%d", dev->bus_number, dev->device_address);
 
-	if (!dev->attached) {
-		return LIBUSB_ERROR_NO_DEVICE;
-	}
+    if (!dev->attached) {
+        return LIBUSB_ERROR_NO_DEVICE;
+    }
 
-	_handle = malloc(sizeof(*_handle) + priv_size);
-	if (!_handle)
-		return LIBUSB_ERROR_NO_MEM;
+    _handle = malloc(sizeof(*_handle) + priv_size);
+    if (!_handle)
+        return LIBUSB_ERROR_NO_MEM;
 
-	r = usbi_mutex_init(&_handle->lock, NULL);
-	if (r) {
-		free(_handle);
-		return LIBUSB_ERROR_OTHER;
-	}
+    r = usbi_mutex_init(&_handle->lock, NULL);
+    if (r) {
+        free(_handle);
+        return LIBUSB_ERROR_OTHER;
+    }
 
-	_handle->dev = libusb_ref_device(dev);
-	_handle->auto_detach_kernel_driver = 0;
-	_handle->claimed_interfaces = 0;
-	memset(&_handle->os_priv, 0, priv_size);
+    _handle->dev = libusb_ref_device(dev);
+    _handle->auto_detach_kernel_driver = 0;
+    _handle->claimed_interfaces = 0;
+    memset(&_handle->os_priv, 0, priv_size);
 
-	r = usbi_backend->open(_handle);
-	if (r < 0) {
-		usbi_dbg("open %d.%d returns %d", dev->bus_number, dev->device_address, r);
-		libusb_unref_device(dev);
-		usbi_mutex_destroy(&_handle->lock);
-		free(_handle);
-		return r;
-	}
+    r = usbi_backend->open(_handle);
+    if (r < 0) {
+        usbi_dbg("open %d.%d returns %d", dev->bus_number, dev->device_address, r);
+        libusb_unref_device(dev);
+        usbi_mutex_destroy(&_handle->lock);
+        free(_handle);
+        return r;
+    }
 
-	usbi_mutex_lock(&ctx->open_devs_lock);
-	list_add(&_handle->list, &ctx->open_devs);
-	usbi_mutex_unlock(&ctx->open_devs_lock);
-	*handle = _handle;
+    usbi_mutex_lock(&ctx->open_devs_lock);
+    list_add(&_handle->list, &ctx->open_devs);
+    usbi_mutex_unlock(&ctx->open_devs_lock);
+    *handle = _handle;
 
-	/* At this point, we want to interrupt any existing event handlers so
-	 * that they realise the addition of the new device's poll fd. One
-	 * example when this is desirable is if the user is running a separate
-	 * dedicated libusb events handling thread, which is running with a long
-	 * or infinite timeout. We want to interrupt that iteration of the loop,
-	 * so that it picks up the new fd, and then continues. */
-	usbi_fd_notification(ctx);
+    /* At this point, we want to interrupt any existing event handlers so
+     * that they realise the addition of the new device's poll fd. One
+     * example when this is desirable is if the user is running a separate
+     * dedicated libusb events handling thread, which is running with a long
+     * or infinite timeout. We want to interrupt that iteration of the loop,
+     * so that it picks up the new fd, and then continues. */
+    usbi_fd_notification(ctx);
 
-	return 0;
+    return 0;
+}
+
+int API_EXPORTED libusb_open_android( libusb_device *dev, libusb_device_handle **handle, int fd )
+{
+    struct libusb_context *ctx = DEVICE_CTX(dev);
+    struct libusb_device_handle *_handle;
+    size_t priv_size = usbi_backend->device_handle_priv_size;
+    int r;
+    usbi_dbg("open %d.%d", dev->bus_number, dev->device_address);
+
+    if (!dev->attached) {
+        return LIBUSB_ERROR_NO_DEVICE;
+    }
+
+    _handle = malloc(sizeof(*_handle) + priv_size);
+    if (!_handle)
+        return LIBUSB_ERROR_NO_MEM;
+
+    r = usbi_mutex_init(&_handle->lock, NULL);
+    if (r) {
+        free(_handle);
+        return LIBUSB_ERROR_OTHER;
+    }
+
+    _handle->dev = libusb_ref_device(dev);
+    _handle->auto_detach_kernel_driver = 0;
+    _handle->claimed_interfaces = 0;
+    memset(&_handle->os_priv, 0, priv_size);
+
+    r = usbi_backend->open(_handle);
+    if (r < 0) {
+        usbi_dbg("open %d.%d returns %d", dev->bus_number, dev->device_address, r);
+        libusb_unref_device(dev);
+        usbi_mutex_destroy(&_handle->lock);
+        free(_handle);
+        return r;
+    }
+
+    usbi_mutex_lock(&ctx->open_devs_lock);
+    list_add(&_handle->list, &ctx->open_devs);
+    usbi_mutex_unlock(&ctx->open_devs_lock);
+    *handle = _handle;
+
+    /* At this point, we want to interrupt any existing event handlers so
+     * that they realise the addition of the new device's poll fd. One
+     * example when this is desirable is if the user is running a separate
+     * dedicated libusb events handling thread, which is running with a long
+     * or infinite timeout. We want to interrupt that iteration of the loop,
+     * so that it picks up the new fd, and then continues. */
+    usbi_fd_notification(ctx);
+
+    return 0;
 }
 
 /** \ingroup dev
