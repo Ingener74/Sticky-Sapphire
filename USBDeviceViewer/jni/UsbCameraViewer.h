@@ -60,10 +60,10 @@ extern "C" {
 /*
  * Class:     com_shnaider_usbcameraviewer_USBCameraViewer
  * Method:    startUsbCameraViewer
- * Signature: ()Z
+ * Signature: (III)Z
  */
 JNIEXPORT jboolean JNICALL Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jint, jint, jint);
 
 /*
  * Class:     com_shnaider_usbcameraviewer_USBCameraViewer

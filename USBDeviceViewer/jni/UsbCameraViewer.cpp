@@ -1,3 +1,4 @@
+
 #include <Common.h>
 #include <Error.h>
 #include <AndroidLogBuffer.h>
@@ -7,6 +8,17 @@
 using namespace std;
 using namespace std::placeholders;
 using namespace usbcv;
+
+template<typename Res, typename Arg>
+Res to_(Arg a){
+    stringstream _;
+    _ << a;
+    Res res;
+    _ >> res;
+
+    return res;
+}
+
 
 shared_ptr<streambuf> error_buf, debug_buf;
 shared_ptr<RgbImageViewer> rgbImageViewer;
@@ -24,7 +36,14 @@ jint JNI_OnLoad( JavaVM* vm, void* reserved )
     cerr << "test cerr" << endl;
 
     jvm = vm;
-    return JNI_OK;
+
+    JNIEnv* jniEnv = nullptr;
+    if ( jvm->GetEnv(reinterpret_cast<void**>(&jniEnv), JNI_VERSION_1_6) != JNI_OK )
+    {
+        return -1;
+    }
+
+    return JNI_VERSION_1_6;
 }
 
 void JNI_OnUnload( JavaVM* vm, void* reserved )
@@ -39,7 +58,7 @@ void drawImage( RgbImage image )
     cout << "draw image " << image.rows << " x " << image.cols << " " << image.buffer.size() << endl;
 }
 
-void thread_func( int fd, promise<exception_ptr>& start, function<void( RgbImage )> onNewImage )
+void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start, function<void( RgbImage )> onNewImage )
 {
     uvc_context_t * ctx = nullptr;
     uvc_device_t * dev = nullptr;
@@ -54,20 +73,18 @@ void thread_func( int fd, promise<exception_ptr>& start, function<void( RgbImage
         res = uvc_init(&ctx, NULL);
         if ( res < 0 ) throw Error("can't init uvc");
 
-        res = uvc_find_device(ctx, &dev, 0, 0, NULL);
+        res = uvc_find_device(ctx, &dev, vid, pid, NULL);
         if ( res < 0 ) throw Error("can't find device");
 
-        res = uvc_open_android(dev, &devh, fd);
-        if ( res < 0 ) throw Error("can't open device");
+        cout << "dev " << vid << ", " << pid << endl;
 
-        res = uvc_stream_open_ctrl(devh, &strmh, &ctrl);
+        res = uvc_open_android(dev, &devh, fd);
+        if ( res < 0 ) throw Error("can't open device " + to_<string>(fd));
+
+        res = uvc_get_stream_ctrl_format_size(devh, &ctrl, UVC_FRAME_FORMAT_YUYV, 640, 480, 30);
         if ( res < 0 ) throw Error("can't open stream control");
 
-//        res = uvc_get_stream_ctrl_format_size(devh, &ctrl, UVC_FRAME_FORMAT_YUYV, 640, 480, 30);
-//        if ( res < 0 ) Error("can't get stream control");
 
-//        res = uvc_start_streaming(devh, &ctrl, nullptr, nullptr, 0);
-//        if ( res < 0 ) Error("can't start streaming");
 
         res = uvc_stream_start_iso(strmh, nullptr, nullptr);
         if ( res < 0 ) throw Error("can't start isochronous stream");
@@ -105,18 +122,17 @@ void thread_func( int fd, promise<exception_ptr>& start, function<void( RgbImage
     }
 }
 
-jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer( JNIEnv * jniEnv, jobject self )
+jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
+        JNIEnv * jniEnv, jobject self, jint vid, jint pid, jint fd )
 {
     try
     {
-        int fd = 0;
-
         rgbImageViewer = make_shared<RgbImageViewer>(jniEnv, self);
 
         promise<exception_ptr> start_promise;
         auto start = start_promise.get_future();
 
-        th = thread(thread_func, fd, ref(start_promise), bind(drawImage, _1));
+        th = thread(thread_func, vid, pid, fd, ref(start_promise), bind(drawImage, _1));
         th.detach();
 
         start.wait();

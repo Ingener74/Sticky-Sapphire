@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,11 +28,13 @@ public class USBCameraViewer extends Activity {
 		System.loadLibrary("UsbCameraViewer");
 	}
 
-	private native boolean startUsbCameraViewer();
+	private native boolean startUsbCameraViewer(int vid, int pid, int fd);
 
 	private native void stopUsbCameraViewer();
 
 	ImageView _previewImage = null;
+
+	UsbDeviceConnection connnection = null;
 
 	private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 	private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
@@ -47,8 +50,16 @@ public class USBCameraViewer extends Activity {
 							UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
 						if (device != null) {
 
-							startUsbCameraViewer();
+							Log.i(TAG, "dev " + device.getVendorId() + ", "
+									+ device.getProductId());
 
+							connnection = ((UsbManager) context
+									.getSystemService(Context.USB_SERVICE))
+									.openDevice(device);
+
+							startUsbCameraViewer(device.getVendorId(),
+									device.getProductId(),
+									connnection.getFileDescriptor());
 						}
 					} else {
 						Log.d(TAG, "permission denied for device " + device);
@@ -125,7 +136,7 @@ public class USBCameraViewer extends Activity {
 						finish();
 					}
 				});
-		
+
 		AlertDialog alert = builder.create();
 		alert.show();
 	}
