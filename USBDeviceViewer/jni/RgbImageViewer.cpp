@@ -13,7 +13,7 @@ using namespace std;
 
 RgbImageViewer::RgbImageViewer( JNIEnv* jniEnv, jobject object_self )
 {
-    string methodName = "";
+    string methodName = "drawBitmap";
 
     jint res = jniEnv->GetJavaVM(&jvm);
     if ( !jvm ) throw Error("can't get java vm");

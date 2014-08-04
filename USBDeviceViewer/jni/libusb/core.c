@@ -1155,7 +1155,7 @@ int API_EXPORTED libusb_open_android( libusb_device *dev, libusb_device_handle *
     _handle->claimed_interfaces = 0;
     memset(&_handle->os_priv, 0, priv_size);
 
-    r = usbi_backend->open(_handle);
+    r = usbi_backend->open_android(_handle, fd);
     if (r < 0) {
         usbi_dbg("open %d.%d returns %d", dev->bus_number, dev->device_address, r);
         libusb_unref_device(dev);
