@@ -19,7 +19,6 @@ Res to_(Arg a){
     return res;
 }
 
-
 shared_ptr<streambuf> error_buf, debug_buf;
 shared_ptr<RgbImageViewer> rgbImageViewer;
 thread th;
@@ -82,9 +81,10 @@ void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start, funct
         if ( res < 0 ) throw Error("can't open device " + to_<string>(fd));
 
         res = uvc_get_stream_ctrl_format_size(devh, &ctrl, UVC_FRAME_FORMAT_YUYV, 640, 480, 30);
-        if ( res < 0 ) throw Error("can't open stream control");
+        if ( res < 0 ) throw Error("can't get stream control");
 
-
+		res = uvc_stream_open_ctrl(devh, &strmh, &ctrl);
+		if (res < 0) throw Error("can't open stream control");
 
         res = uvc_stream_start_iso(strmh, nullptr, nullptr);
         if ( res < 0 ) throw Error("can't start isochronous stream");
@@ -99,16 +99,14 @@ void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start, funct
             res = uvc_stream_get_frame(strmh, &frame, 0);
             if ( res < 0 ) throw Error("can't get frame");
 
-            uvc_frame_t *bgr = uvc_allocate_frame(frame->width * frame->height * 3); // RAII destroy: uvc_free_frame(bgr);
-            if ( !bgr ) throw Error("can't allocate frame");
+            unique_ptr<uvc_frame_t> bgr_(uvc_allocate_frame(frame->width * frame->height * 3), bind(uvc_free_frame, _1));
+            if ( !bgr_ ) throw Error("can't allocate frame");
 
-            res = uvc_any2bgr(frame, bgr);
+            res = uvc_any2bgr(frame, bgr_.get());
             if ( res < 0 ) throw Error("can't convert any to bgr");
 
             RgbImage newImage;
             onNewImage(newImage);
-
-            uvc_free_frame(bgr);
         }
 
         uvc_stop_streaming(devh);
