@@ -145,6 +145,7 @@ public class USBCameraViewer extends Activity {
 	public void onPause() {
 		super.onPause();
 		stopUsbCameraViewer();
+		connnection.close();
 	}
 
 	@Override
