@@ -1,4 +1,3 @@
-
 #include <Common.h>
 #include <Error.h>
 #include <AndroidLogBuffer.h>
@@ -9,8 +8,9 @@ using namespace std;
 using namespace std::placeholders;
 using namespace usbcv;
 
-template<typename Res, typename Arg>
-Res to_(Arg a){
+template <typename Res, typename Arg>
+Res to_( Arg a )
+{
     stringstream _;
     _ << a;
     Res res;
@@ -52,16 +52,13 @@ void JNI_OnUnload( JavaVM* vm, void* reserved )
     debug_buf.reset();
 }
 
-void drawImage( RgbImage image, exception_ptr error )
+void drawImage( RgbImage image/*, exception_ptr error */)
 {
-	if(error){
-		cerr << "drawImage: error" << endl;
-	}
     cout << "draw image " << image.rows << " x " << image.cols << " " << image.buffer.size() << endl;
 }
 
-void thread_func( int vid, int pid, int fd,
-		promise<exception_ptr>& start, function<void( RgbImage, exception_ptr )> onNewImage )
+void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start,
+        function<void( RgbImage/*, exception_ptr */)> onNewImage )
 {
     uvc_context_t * ctx = nullptr;
     uvc_device_t * dev = nullptr;
@@ -87,30 +84,42 @@ void thread_func( int vid, int pid, int fd,
         res = uvc_get_stream_ctrl_format_size(devh, &ctrl, UVC_FRAME_FORMAT_YUYV, 640, 480, 30);
         if ( res < 0 ) throw Error("can't get stream control");
 
-		res = uvc_stream_open_ctrl(devh, &strmh, &ctrl);
-		if (res < 0) throw Error("can't open stream control");
+        res = uvc_stream_open_ctrl(devh, &strmh, &ctrl);
+        if ( res < 0 ) throw Error("can't open stream control");
 
         res = uvc_stream_start_iso(strmh, nullptr, nullptr);
         if ( res < 0 ) throw Error("can't start isochronous stream");
 
         start.set_value(exception_ptr());
 
+        cout << "capture started" << endl;
+
         for ( ;; )
         {
 //          this_thread::yield(); /* for exit */
 
             uvc_frame* frame = nullptr;
-            res = uvc_stream_get_frame(strmh, &frame, 0);
+            res = uvc_stream_get_frame(strmh, &frame, 100000);
             if ( res < 0 ) throw Error("can't get frame");
+            if ( !frame || !frame->width || !frame->height || !frame->data )
+            {
+                cerr << "warning: can't get frame" << endl;
+                continue;
+            }
 
-            shared_ptr<uvc_frame_t> bgr_(uvc_allocate_frame(frame->width * frame->height * 3), bind(uvc_free_frame, _1));
-            if ( !bgr_ ) throw Error("can't allocate frame");
+            shared_ptr<uvc_frame_t> bgr(uvc_allocate_frame(frame->width * frame->height * 3), bind(uvc_free_frame, _1));
+            if ( !bgr ) throw Error("can't allocate frame");
 
-            res = uvc_any2bgr(frame, bgr_.get());
+            res = uvc_any2rgb(frame, bgr.get());
             if ( res < 0 ) throw Error("can't convert any to bgr");
 
             RgbImage newImage;
-            onNewImage(newImage, exception_ptr());
+            newImage.rows = bgr->height;
+            newImage.cols = bgr->width;
+            newImage.buffer = vector<uint8_t>(static_cast<uint8_t*>(bgr->data),
+                    static_cast<uint8_t*>(bgr->data) + (bgr->width * bgr->height * 3));
+
+            onNewImage(newImage);
         }
 
         uvc_stop_streaming(devh);
@@ -120,14 +129,14 @@ void thread_func( int vid, int pid, int fd,
     }
     catch ( exception const & e )
     {
-		auto curError = current_exception();
-		onNewImage(RgbImage(), curError);
-		start.set_exception(curError);
+        auto curError = current_exception();
+        cerr << "capture thread error " << e.what() << endl;
+        start.set_exception(curError);
     }
 }
 
-jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
-        JNIEnv * jniEnv, jobject self, jint vid, jint pid, jint fd )
+jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer( JNIEnv * jniEnv, jobject self,
+        jint vid, jint pid, jint fd )
 {
     try
     {
@@ -136,7 +145,8 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
         promise<exception_ptr> start_promise;
         auto start = start_promise.get_future();
 
-        th = thread(thread_func, vid, pid, fd, ref(start_promise), bind(drawImage, _1, _2));
+//        th = thread(thread_func, vid, pid, fd, ref(start_promise), bind(drawImage, _1/*, _2*/));
+        th = thread(thread_func, vid, pid, fd, ref(start_promise), bind(&RgbImageViewer::drawRgbImage, rgbImageViewer.get(), _1/*, _2*/));
         th.detach();
 
         start.wait();
@@ -153,4 +163,6 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
 
 void Java_com_shnaider_usbcameraviewer_USBCameraViewer_stopUsbCameraViewer( JNIEnv *, jobject )
 {
+    cout << "stop capture thread" << endl;
+    th = thread();
 }

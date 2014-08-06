@@ -36,7 +36,7 @@ RgbImageViewer::~RgbImageViewer()
 
 void RgbImageViewer::drawRgbImage( RgbImage rgbImage )
 {
-    if ( !rgbImage.cols || !rgbImage.rows || !rgbImage.buffer.empty() ) throw Error("image is empty");
+    if ( !rgbImage.cols || !rgbImage.rows || rgbImage.buffer.empty() ) throw Error("image is empty");
 
     JNIEnv * jniEnv = 0;
     jint res = 0;
