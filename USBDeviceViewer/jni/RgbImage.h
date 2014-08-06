@@ -12,9 +12,9 @@
 
 struct RgbImage
 {
-	int32_t rows;
-	int32_t cols;
-	std::vector<uint8_t> buffer;
+	int32_t rows = 0;
+	int32_t cols = 0;
+	std::vector<uint8_t> buffer = std::vector<uint8_t>(rows, cols);
 };
 
 #endif /* RGBIMAGE_H_ */

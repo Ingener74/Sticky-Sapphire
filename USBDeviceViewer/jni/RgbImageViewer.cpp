@@ -53,9 +53,9 @@ void RgbImageViewer::drawRgbImage( RgbImage rgbImage )
     jclass class_Bitmap_Config = jniEnv->FindClass("android/graphics/Bitmap$Config");
     if ( !class_Bitmap ) throw Error("can't find bitmap config class");
 
-    jobject object_Bitmap_Config = jniEnv->CallStaticObjectMethod(class_Bitmap_Config,
-            jniEnv->GetStaticMethodID(class_Bitmap_Config, "valueOf",
-                    "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;"), string_Config_Name);
+	jobject object_Bitmap_Config = jniEnv->CallStaticObjectMethod(
+			class_Bitmap_Config, jniEnv->GetStaticMethodID(class_Bitmap_Config, "valueOf",
+			"(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;"), string_Config_Name);
     if ( !object_Bitmap_Config ) throw Error("can't create bitmap config object");
 
     jobject object_Bitmap = jniEnv->CallStaticObjectMethod(class_Bitmap, method_Bitmap_createBitmap, rgbImage.cols,

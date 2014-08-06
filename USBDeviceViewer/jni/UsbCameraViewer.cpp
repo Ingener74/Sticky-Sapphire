@@ -52,12 +52,16 @@ void JNI_OnUnload( JavaVM* vm, void* reserved )
     debug_buf.reset();
 }
 
-void drawImage( RgbImage image )
+void drawImage( RgbImage image, exception_ptr error )
 {
+	if(error){
+		cerr << "drawImage: error" << endl;
+	}
     cout << "draw image " << image.rows << " x " << image.cols << " " << image.buffer.size() << endl;
 }
 
-void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start, function<void( RgbImage )> onNewImage )
+void thread_func( int vid, int pid, int fd,
+		promise<exception_ptr>& start, function<void( RgbImage, exception_ptr )> onNewImage )
 {
     uvc_context_t * ctx = nullptr;
     uvc_device_t * dev = nullptr;
@@ -99,14 +103,14 @@ void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start, funct
             res = uvc_stream_get_frame(strmh, &frame, 0);
             if ( res < 0 ) throw Error("can't get frame");
 
-            unique_ptr<uvc_frame_t> bgr_(uvc_allocate_frame(frame->width * frame->height * 3), bind(uvc_free_frame, _1));
+            shared_ptr<uvc_frame_t> bgr_(uvc_allocate_frame(frame->width * frame->height * 3), bind(uvc_free_frame, _1));
             if ( !bgr_ ) throw Error("can't allocate frame");
 
             res = uvc_any2bgr(frame, bgr_.get());
             if ( res < 0 ) throw Error("can't convert any to bgr");
 
             RgbImage newImage;
-            onNewImage(newImage);
+            onNewImage(newImage, exception_ptr());
         }
 
         uvc_stop_streaming(devh);
@@ -116,7 +120,9 @@ void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start, funct
     }
     catch ( exception const & e )
     {
-        start.set_exception(current_exception());
+		auto curError = current_exception();
+		onNewImage(RgbImage(), curError);
+		start.set_exception(curError);
     }
 }
 
@@ -130,7 +136,7 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
         promise<exception_ptr> start_promise;
         auto start = start_promise.get_future();
 
-        th = thread(thread_func, vid, pid, fd, ref(start_promise), bind(drawImage, _1));
+        th = thread(thread_func, vid, pid, fd, ref(start_promise), bind(drawImage, _1, _2));
         th.detach();
 
         start.wait();
