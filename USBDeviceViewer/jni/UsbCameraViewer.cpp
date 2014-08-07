@@ -1,13 +1,15 @@
+
 #include <Common.h>
 #include <Error.h>
-#include <AndroidLogBuffer.h>
 #include <UsbCameraViewer.h>
 #include <RgbImageViewer.h>
 
 using namespace std;
 using namespace std::placeholders;
-using namespace usbcv;
 
+/*
+ * Definitions
+ */
 template <typename Res, typename Arg>
 Res to_( Arg a )
 {
@@ -19,12 +21,49 @@ Res to_( Arg a )
     return res;
 }
 
+class AndroidLogBuffer: public std::streambuf
+{
+public:
+	AndroidLogBuffer(std::ostream& stream, android_LogPriority priority = ANDROID_LOG_DEBUG) :
+			std::streambuf(), _buffer(1024), _stream(stream), _orig(stream.rdbuf()), _priority(priority)
+	{
+		setp(&_buffer.front(), &_buffer.back() + 1);
+		_stream.rdbuf(this);
+	}
+	virtual ~AndroidLogBuffer()
+	{
+		_stream.rdbuf(_orig);
+	}
+
+	virtual int sync()
+	{
+		__android_log_print(_priority, "UsbCameraViewer", "%s", pbase());
+		pbump(-(pptr() - pbase()));
+		for (auto &b : _buffer)
+		{
+			b = 0;
+		}
+		return 0;
+	}
+
+private:
+	std::vector<char> _buffer;
+	std::ostream& _stream;
+	std::streambuf* _orig = nullptr;
+	android_LogPriority _priority;
+};
+
+/*
+ * Data
+ */
 shared_ptr<streambuf> error_buf, debug_buf;
 shared_ptr<RgbImageViewer> rgbImageViewer;
 thread th;
-
 JavaVM *jvm = nullptr;
 
+/*
+ * Code
+ */
 jint JNI_OnLoad( JavaVM* vm, void* reserved )
 {
     error_buf = make_shared<AndroidLogBuffer>(cerr, ANDROID_LOG_ERROR);
@@ -52,13 +91,8 @@ void JNI_OnUnload( JavaVM* vm, void* reserved )
     debug_buf.reset();
 }
 
-void drawImage( RgbImage image/*, exception_ptr error */)
-{
-    cout << "draw image " << image.rows << " x " << image.cols << " " << image.buffer.size() << endl;
-}
-
 void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start,
-        function<void( RgbImage/*, exception_ptr */)> onNewImage )
+        function<void( RgbImage)> onNewImage )
 {
     uvc_context_t * ctx = nullptr;
     uvc_device_t * dev = nullptr;
@@ -76,8 +110,6 @@ void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start,
         res = uvc_find_device(ctx, &dev, vid, pid, NULL);
         if ( res < 0 ) throw Error("can't find device");
 
-        cout << "dev " << vid << ", " << pid << endl;
-
         res = uvc_open_android(dev, &devh, fd);
         if ( res < 0 ) throw Error("can't open device " + to_<string>(fd));
 
@@ -92,12 +124,8 @@ void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start,
 
         start.set_value(exception_ptr());
 
-        cout << "capture started" << endl;
-
         for ( ;; )
         {
-//          this_thread::yield(); /* for exit */
-
             uvc_frame* frame = nullptr;
             res = uvc_stream_get_frame(strmh, &frame, 100000);
             if ( res < 0 ) throw Error("can't get frame");
@@ -129,8 +157,8 @@ void thread_func( int vid, int pid, int fd, promise<exception_ptr>& start,
     }
     catch ( exception const & e )
     {
+        cerr << "uvc thread error " << e.what() << endl;
         auto curError = current_exception();
-        cerr << "capture thread error " << e.what() << endl;
         start.set_exception(curError);
     }
 }
@@ -145,8 +173,7 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
         promise<exception_ptr> start_promise;
         auto start = start_promise.get_future();
 
-//        th = thread(thread_func, vid, pid, fd, ref(start_promise), bind(drawImage, _1/*, _2*/));
-        th = thread(thread_func, vid, pid, fd, ref(start_promise), bind(&RgbImageViewer::drawRgbImage, rgbImageViewer.get(), _1/*, _2*/));
+        th = thread(thread_func, vid, pid, fd, ref(start_promise), bind(&RgbImageViewer::drawRgbImage, rgbImageViewer.get(), _1));
         th.detach();
 
         start.wait();
