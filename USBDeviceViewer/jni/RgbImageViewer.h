@@ -17,7 +17,7 @@ public:
     using Ptr = std::shared_ptr<RgbImageViewer>;
 
     RgbImageViewer( JNIEnv * jniEnv, jobject object_self );
-    virtual ~RgbImageViewer();
+    virtual ~RgbImageViewer() = default;
 
     void drawRgbImage( RgbImage );
 

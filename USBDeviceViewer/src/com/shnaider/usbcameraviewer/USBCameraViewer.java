@@ -16,6 +16,8 @@ import android.graphics.Bitmap;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.opengl.GLES20;
+import android.opengl.GLUtils;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
