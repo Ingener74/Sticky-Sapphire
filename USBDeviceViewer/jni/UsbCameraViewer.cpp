@@ -9,16 +9,6 @@ using namespace std::placeholders;
 /*
  * Definitions
  */
-//template<typename Res, typename Arg>
-//Res to_(Arg a)
-//{
-//    stringstream _;
-//    _ << a;
-//    Res res;
-//    _ >> res;
-//
-//    return res;
-//}
 
 class AndroidLogBuffer: public std::streambuf
 {
@@ -57,7 +47,8 @@ private:
  */
 shared_ptr<streambuf> error_buf, debug_buf;
 shared_ptr<RgbImageViewer> rgbImageViewer;
-thread th;
+thread controlThread;
+atomic<bool> stopThread;
 JavaVM *jvm = nullptr;
 
 /*
@@ -111,7 +102,7 @@ void thread_func(int vid, int pid, int fd, promise<exception_ptr>& start, functi
 
         start.set_value(exception_ptr());
 
-        for (;;)
+        while(true)
         {
             uvc_frame* frame = nullptr;
             if (uvc_stream_get_frame(strmh, &frame, 100000) < 0) throw Error("can't get frame");
@@ -151,6 +142,7 @@ void thread_func(int vid, int pid, int fd, promise<exception_ptr>& start, functi
 jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(JNIEnv * jniEnv, jobject self, jint vid,
         jint pid, jint fd)
 {
+    stopThread = false;
     try
     {
         rgbImageViewer = make_shared<RgbImageViewer>(jniEnv, self);
@@ -158,9 +150,8 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
         promise<exception_ptr> start_promise;
         auto start = start_promise.get_future();
 
-        th = thread(thread_func, vid, pid, fd, ref(start_promise),
-                bind(&RgbImageViewer::drawRgbImage, rgbImageViewer.get(), _1));
-        th.detach();
+        controlThread = thread(thread_func, vid, pid, fd, ref(start_promise),
+                [rgbImageViewer](RgbImage image){rgbImageViewer->drawRgbImage(image); });
 
         start.wait();
         if (start.get()) rethrow_exception(start.get());
@@ -177,5 +168,6 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
 void Java_com_shnaider_usbcameraviewer_USBCameraViewer_stopUsbCameraViewer(JNIEnv *, jobject)
 {
     cout << "stop capture thread" << endl;
-    th = thread();
+    stopThread = true;
+    controlThread = thread();
 }

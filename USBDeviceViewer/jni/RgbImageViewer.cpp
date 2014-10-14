@@ -63,7 +63,7 @@ void RgbImageViewer::drawRgbImage( RgbImage rgbImage )
 
     if (data)
     {
-        uint8_t * src = &rgbImage.buffer[0];
+        uint8_t * src = rgbImage.buffer.data();
         uint8_t * dst = data;
         for (int i = 0, imax = rgbImage.rows; i < imax; ++i)
         {
