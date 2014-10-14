@@ -11,6 +11,17 @@ using namespace std::placeholders;
  * Definitions
  */
 
+template<typename Res, typename Arg>
+Res to_(Arg a)
+{
+    stringstream _;
+    _ << a;
+    Res res;
+    _ >> res;
+
+    return res;
+}
+
 class AndroidLogBuffer: public streambuf
 {
 public:
@@ -92,7 +103,7 @@ void thread_func(int vid, int pid, int fd, promise<exception_ptr>& start, functi
 
         if (uvc_find_device(ctx, &dev, vid, pid, NULL) < 0) throw Error("can't find device");
 
-        if (uvc_open_android(dev, &devh, fd) < 0) throw Error("can't open device " + to_string(fd));
+        if (uvc_open_android(dev, &devh, fd) < 0) throw Error("can't open device " + to_<string>(fd));
 
         if (uvc_get_stream_ctrl_format_size(devh, &ctrl, UVC_FRAME_FORMAT_YUYV, 640, 480, 30) < 0)
             throw Error("can't get stream control");
@@ -155,7 +166,7 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
         auto start = start_promise.get_future();
 
         controlThread = thread(thread_func, vid, pid, fd, ref(start_promise),
-                [rgbImageViewer](RgbImage image){rgbImageViewer->drawRgbImage(image); });
+                [](RgbImage image){ rgbImageViewer->drawRgbImage(image); });
 
         start.wait();
         if (start.get()) rethrow_exception(start.get());
