@@ -1,3 +1,4 @@
+
 #include <Common.h>
 #include <Error.h>
 #include <UsbCameraViewer.h>
@@ -10,11 +11,11 @@ using namespace std::placeholders;
  * Definitions
  */
 
-class AndroidLogBuffer: public std::streambuf
+class AndroidLogBuffer: public streambuf
 {
 public:
-    AndroidLogBuffer(std::ostream& stream, android_LogPriority priority = ANDROID_LOG_DEBUG) :
-            std::streambuf(), _buffer(1024), _stream(stream), _orig(stream.rdbuf()), _priority(priority)
+    AndroidLogBuffer(ostream& stream, android_LogPriority priority = ANDROID_LOG_DEBUG) :
+            streambuf(), _buffer(1024), _stream(stream), _orig(stream.rdbuf()), _priority(priority)
     {
         setp(&_buffer.front(), &_buffer.back() + 1);
         _stream.rdbuf(this);
@@ -36,9 +37,9 @@ public:
     }
 
 private:
-    std::vector<char> _buffer;
-    std::ostream& _stream;
-    std::streambuf* _orig = nullptr;
+    vector<char> _buffer;
+    ostream& _stream;
+    streambuf* _orig = nullptr;
     android_LogPriority _priority = ANDROID_LOG_DEBUG;
 };
 
@@ -112,7 +113,9 @@ void thread_func(int vid, int pid, int fd, promise<exception_ptr>& start, functi
                 continue;
             }
 
-            shared_ptr<uvc_frame_t> bgr(uvc_allocate_frame(frame->width * frame->height * 3), bind(uvc_free_frame, _1));
+            shared_ptr<uvc_frame_t> bgr(uvc_allocate_frame(frame->width * frame->height * 3),
+                    [](uvc_frame_t *frame){ uvc_free_frame(frame); });
+
             if (!bgr) throw Error("can't allocate frame");
 
             if (uvc_any2rgb(frame, bgr.get()) < 0) throw Error("can't convert any to bgr");
@@ -120,7 +123,8 @@ void thread_func(int vid, int pid, int fd, promise<exception_ptr>& start, functi
             RgbImage newImage;
             newImage.rows = bgr->height;
             newImage.cols = bgr->width;
-            newImage.buffer = vector<uint8_t>(static_cast<uint8_t*>(bgr->data),
+            newImage.buffer = vector<uint8_t>(
+                    static_cast<uint8_t*>(bgr->data),
                     static_cast<uint8_t*>(bgr->data) + (bgr->width * bgr->height * 3));
 
             onNewImage(newImage);
@@ -158,7 +162,7 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
 
         return true;
     }
-    catch (std::exception const & e)
+    catch (exception const & e)
     {
         cerr << "Error: " << e.what() << endl;
         return false;
