@@ -60,6 +60,8 @@ private:
 shared_ptr<streambuf> error_buf, debug_buf;
 shared_ptr<RgbImageViewer> rgbImageViewer;
 thread controlThread;
+
+thread mainThread;
 atomic<bool> stopThread;
 JavaVM *jvm = nullptr;
 
@@ -158,6 +160,21 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
         jint pid, jint fd)
 {
     stopThread = false;
+    mainThread = thread([stopThread]()
+    {
+        while(!stopThread)
+        {
+            try
+            {
+
+            }
+            catch (exception const & e)
+            {
+                cerr << e.what() << endl;
+            }
+        }
+    });
+
     try
     {
         rgbImageViewer = make_shared<RgbImageViewer>(jniEnv, self);
