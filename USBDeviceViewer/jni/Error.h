@@ -8,7 +8,7 @@
 #ifndef ERROR_H_
 #define ERROR_H_
 
-#include <Common.h>
+//#include <Common.h>
 
 class Error: public std::runtime_error
 {

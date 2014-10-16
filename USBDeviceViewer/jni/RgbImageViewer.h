@@ -8,7 +8,11 @@
 #ifndef RGBIMAGEVIEWER_H_
 #define RGBIMAGEVIEWER_H_
 
-#include <Common.h>
+//#include <Common.h>
+#include <memory>
+
+#include <jni.h>
+
 #include <RgbImage.h>
 
 class RgbImageViewer

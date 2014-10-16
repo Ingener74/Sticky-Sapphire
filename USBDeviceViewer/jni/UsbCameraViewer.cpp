@@ -1,5 +1,7 @@
 
-#include <Common.h>
+#include <future>
+
+//#include <Common.h>
 #include <Error.h>
 #include <UsbCameraViewer.h>
 #include <RgbImageViewer.h>
@@ -166,11 +168,27 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
         {
             try
             {
+                promise
 
+                controlThread = thread([stopThread](){
+                    try
+                    {
+                        while(!stopThread){
+
+                        }
+                    }
+                    catch (exception const &e)
+                    {
+                        cerr << e.what() << endl;
+                    }
+                });
+
+                // wait
             }
             catch (exception const & e)
             {
                 cerr << e.what() << endl;
+                this_thread::sleep_for(chrono::seconds(1));
             }
         }
     });
@@ -201,5 +219,5 @@ void Java_com_shnaider_usbcameraviewer_USBCameraViewer_stopUsbCameraViewer(JNIEn
 {
     cout << "stop capture thread" << endl;
     stopThread = true;
-    controlThread = thread();
+    mainThread.join();
 }
