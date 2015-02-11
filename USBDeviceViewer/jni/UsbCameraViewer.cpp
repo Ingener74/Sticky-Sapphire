@@ -1,8 +1,14 @@
 
 #include <future>
+#include <iostream>
+#include <stdexcept>
+#include <sstream>
 
-//#include <Common.h>
-#include <Error.h>
+#include <android/log.h>
+
+#include <libusb/libusb.h>
+#include <libuvc/include/libuvc/libuvc.h>
+
 #include <UsbCameraViewer.h>
 #include <RgbImageViewer.h>
 
@@ -103,37 +109,46 @@ void thread_func(int vid, int pid, int fd, promise<exception_ptr>& start, functi
 
     try
     {
-        if (uvc_init(&ctx, NULL) < 0) throw Error("can't init uvc");
+        if (uvc_init(&ctx, NULL) < 0)
+            throw runtime_error("can't init uvc");
 
-        if (uvc_find_device(ctx, &dev, vid, pid, NULL) < 0) throw Error("can't find device");
+        if (uvc_find_device(ctx, &dev, vid, pid, NULL) < 0)
+            throw runtime_error("can't find device");
 
-        if (uvc_open_android(dev, &devh, fd) < 0) throw Error("can't open device " + to_<string>(fd));
+        if (uvc_open_android(dev, &devh, fd) < 0)
+            throw runtime_error("can't open device " + to_<string>(fd));
 
         if (uvc_get_stream_ctrl_format_size(devh, &ctrl, UVC_FRAME_FORMAT_YUYV, 640, 480, 30) < 0)
-            throw Error("can't get stream control");
+            throw runtime_error("can't get stream control");
 
-        if (uvc_stream_open_ctrl(devh, &strmh, &ctrl) < 0) throw Error("can't open stream control");
+        if (uvc_stream_open_ctrl(devh, &strmh, &ctrl) < 0)
+            throw runtime_error("can't open stream control");
 
-        if (uvc_stream_start_iso(strmh, nullptr, nullptr) < 0) throw Error("can't start isochronous stream");
+        if (uvc_stream_start_iso(strmh, nullptr, nullptr) < 0)
+            throw runtime_error("can't start isochronous stream");
 
         start.set_value(exception_ptr());
 
-        while(true)
+        while (true)
         {
             uvc_frame* frame = nullptr;
-            if (uvc_stream_get_frame(strmh, &frame, 100000) < 0) throw Error("can't get frame");
+            if (uvc_stream_get_frame(strmh, &frame, 100000) < 0)
+                throw runtime_error("can't get frame");
+
             if (!frame || !frame->width || !frame->height || !frame->data)
             {
                 cerr << "warning: can't get frame" << endl;
                 continue;
             }
 
-            shared_ptr<uvc_frame_t> bgr(uvc_allocate_frame(frame->width * frame->height * 3),
-                    [](uvc_frame_t *frame){ uvc_free_frame(frame); });
+            shared_ptr<uvc_frame_t> bgr(uvc_allocate_frame(frame->width * frame->height * 3), [](uvc_frame_t *frame)
+            {   uvc_free_frame(frame);});
 
-            if (!bgr) throw Error("can't allocate frame");
+            if (!bgr)
+                throw runtime_error("can't allocate frame");
 
-            if (uvc_any2rgb(frame, bgr.get()) < 0) throw Error("can't convert any to bgr");
+            if (uvc_any2rgb(frame, bgr.get()) < 0)
+                throw runtime_error("can't convert any to bgr");
 
             RgbImage newImage;
             newImage.rows = bgr->height;

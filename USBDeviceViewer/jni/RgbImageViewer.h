@@ -8,18 +8,16 @@
 #ifndef RGBIMAGEVIEWER_H_
 #define RGBIMAGEVIEWER_H_
 
-//#include <Common.h>
 #include <memory>
 
 #include <jni.h>
+#include <android/bitmap.h>
 
 #include <RgbImage.h>
 
 class RgbImageViewer
 {
 public:
-    using Ptr = std::shared_ptr<RgbImageViewer>;
-
     RgbImageViewer( JNIEnv * jniEnv, jobject object_self );
     virtual ~RgbImageViewer() = default;
 

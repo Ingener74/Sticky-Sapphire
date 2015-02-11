@@ -8,7 +8,7 @@
 #ifndef RGBIMAGE_H_
 #define RGBIMAGE_H_
 
-//#include <Common.h>
+#include <vector>
 
 struct RgbImage
 {

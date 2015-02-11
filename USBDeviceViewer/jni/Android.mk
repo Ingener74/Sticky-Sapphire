@@ -17,7 +17,6 @@ LOCAL_C_INCLUDES :=                    \
 LOCAL_SRC_FILES :=                     \
     UsbCameraViewer.cpp                \
     RgbImageViewer.cpp                 \
-    Error.cpp                          \
 
 LOCAL_LDLIBS    := -llog -landroid -ljnigraphics
 
