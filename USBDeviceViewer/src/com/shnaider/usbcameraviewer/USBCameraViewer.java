@@ -34,51 +34,61 @@ public class USBCameraViewer extends Activity {
 
 	private native void stopUsbCameraViewer();
 
-	ImageView _previewImage = null;
+	ImageView previewImage = null;
 
-	UsbDeviceConnection connnection = null;
+	UsbDeviceConnection connection = null;
 
 	private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
-	private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+	private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
 
 		public void onReceive(Context context, Intent intent) {
+			
 			String action = intent.getAction();
-			if (ACTION_USB_PERMISSION.equals(action)) {
-				synchronized (this) {
-					UsbDevice device = (UsbDevice) intent
-							.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-
-					if (intent.getBooleanExtra(
-							UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-						if (device != null) {
-
-							Log.i(TAG, "dev " + device.getVendorId() + ", "
-									+ device.getProductId());
-
-							connnection = ((UsbManager) context
-									.getSystemService(Context.USB_SERVICE))
-									.openDevice(device);
-
-							startUsbCameraViewer(device.getVendorId(),
-									device.getProductId(),
-									connnection.getFileDescriptor());
-						}
-					} else {
-						Log.d(TAG, "permission denied for device " + device);
-					}
+			
+			if (!ACTION_USB_PERMISSION.equals(action)) {
+				Log.d(TAG, "action is not usb permission");
+				return;
+			}
+			
+			synchronized (this) {
+				UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+				
+				if (!intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+					Log.d(TAG, "permission denied for device " + device);
+					return;
 				}
+				if (device == null) {
+					Log.d(TAG, "device is null");
+					return;
+				}
+				
+				Log.i(TAG, "dev " + device.getVendorId() + ", "
+						+ device.getProductId());
+				
+				connection = ((UsbManager) context
+						.getSystemService(Context.USB_SERVICE))
+						.openDevice(device);
+				
+				if(connection == null){
+					Log.d(TAG, "connection is null");
+					return;
+				}
+				
+				startUsbCameraViewer(device.getVendorId(),
+						device.getProductId(),
+						connection.getFileDescriptor());
 			}
 		}
 	};
 
-	private PendingIntent mPermissionIntent;
+	private PendingIntent permissionIntent = null;
 
 	void drawBitmap(final Bitmap bitmap) {
-		_previewImage.post(new Runnable() {
+		previewImage.post(new Runnable() {
 
 			@Override
 			public void run() {
-				_previewImage.setImageBitmap(bitmap);
+				previewImage.setImageBitmap(bitmap);
 			}
 		});
 	}
@@ -87,8 +97,10 @@ public class USBCameraViewer extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		
+		Log.d(TAG, "onCreate");
 
-		_previewImage = (ImageView) findViewById(R.id.PreviewImage);
+		previewImage = (ImageView) findViewById(R.id.PreviewImage);
 	}
 
 	@Override
@@ -105,12 +117,19 @@ public class USBCameraViewer extends Activity {
 	public void onResume() {
 		super.onResume();
 
+		Log.d(TAG, "onResume");
+
 		UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
-		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
-				ACTION_USB_PERMISSION), 0);
+		permissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+		
+		if(permissionIntent == null){
+			Log.d(TAG, "permission intent is null");
+			return;
+		}
+		
 		IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-		registerReceiver(mUsbReceiver, filter);
+		registerReceiver(usbReceiver, filter);
 
 		HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
 		Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
@@ -119,10 +138,8 @@ public class USBCameraViewer extends Activity {
 
 			// USB\VID_046D&PID_082D&REV_0011&MI_02
 
-			if (device.getVendorId() == 0x046D
-					&& device.getProductId() == 0x082D) {
-
-				manager.requestPermission(device, mPermissionIntent);
+			if (device.getVendorId() == 0x046D && device.getProductId() == 0x082D) {
+				manager.requestPermission(device, permissionIntent);
 
 				return;
 			}
@@ -146,8 +163,16 @@ public class USBCameraViewer extends Activity {
 	@Override
 	public void onPause() {
 		super.onPause();
+		
+		Log.d(TAG, "onPause");
+		
 		stopUsbCameraViewer();
-		connnection.close();
+		unregisterReceiver(usbReceiver);
+		if(connection == null){
+			Log.d(TAG, "connection is null");
+			return;
+		}
+		connection.close();
 	}
 
 	@Override

@@ -13,15 +13,15 @@
 #include <jni.h>
 #include <android/bitmap.h>
 
-#include <RgbImage.h>
+#include "RgbImage.h"
 
 class RgbImageViewer
 {
 public:
-    RgbImageViewer( JNIEnv * jniEnv, jobject object_self );
-    virtual ~RgbImageViewer() = default;
+    RgbImageViewer(JNIEnv * jniEnv, jobject object_self);
+    virtual ~RgbImageViewer();
 
-    void drawRgbImage( RgbImage );
+    void drawRgbImage(RgbImage);
 
 private:
     JavaVM *jvm = nullptr;

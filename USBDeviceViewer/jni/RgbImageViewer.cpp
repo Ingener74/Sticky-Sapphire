@@ -5,7 +5,9 @@
  *      Author: pavel
  */
 
-#include <RgbImageViewer.h>
+#include <iostream>
+
+#include "RgbImageViewer.h"
 
 using namespace std;
 
@@ -30,6 +32,11 @@ RgbImageViewer::RgbImageViewer(JNIEnv* jniEnv, jobject object_self)
         throw runtime_error("can't get drawBigmap method");
 
     jniEnv->DeleteLocalRef(class_self);
+}
+
+RgbImageViewer::~RgbImageViewer()
+{
+    cout << __PRETTY_FUNCTION__ << endl;
 }
 
 void RgbImageViewer::drawRgbImage( RgbImage rgbImage )
