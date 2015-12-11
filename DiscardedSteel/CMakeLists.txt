@@ -4,6 +4,7 @@ set(DiscardedSteel_SOURCES
     src/RgbImageViewer.cpp
     src/UsbCameraViewer.cpp
     src/Capture.cpp
+    src/Updater.cpp
 )
 
 add_library(DiscardedSteel SHARED ${DiscardedSteel_SOURCES})

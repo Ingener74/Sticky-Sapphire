@@ -10,10 +10,15 @@
 
 namespace discarded_steel {
 
+class Updater;
+
 class Capture {
 public:
-    Capture();
+    Capture(int vid, int pid, int fd, Updater*);
     virtual ~Capture();
+
+private:
+    Updater* updater = nullptr;
 };
 
 } /* namespace discarded_steel */
