@@ -16,3 +16,5 @@ add_subdirectory(USBDeviceViewer/jni/libuvc)
 add_definitions(-std=c++14)
 
 add_subdirectory(DiscardedSteel)
+
+add_subdirectory(WrenchRough)
