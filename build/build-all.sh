@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ "$#" -lt 2 ]]; then
+	echo "Usage: ./build-all.sh <path-to-swig-exe> <path-to-jdk>"
+	exit 1
+fi
+
 cmake .. -DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchains/android-cmake/android.toolchain.cmake \
 	-DANDROID_ABI="armeabi-v7a with NEON" \
