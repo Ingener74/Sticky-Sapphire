@@ -9,3 +9,7 @@ set(DiscardedSteel_SOURCES
 
 add_library(DiscardedSteel ${DiscardedSteel_SOURCES})
 target_link_libraries(DiscardedSteel usb uvc log android jnigraphics)
+
+if(NOT EXISTS ${SYSROOT})
+    add_dependencies(DiscardedSteel ext_POCO)
+endif()

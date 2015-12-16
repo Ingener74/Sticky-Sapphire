@@ -8,6 +8,8 @@
 #ifndef DISCARDEDSTEEL_INCLUDE_DISCARDEDSTEEL_CAPTURE_H_
 #define DISCARDEDSTEEL_INCLUDE_DISCARDEDSTEEL_CAPTURE_H_
 
+#include <Poco/Activity.h>
+
 namespace discarded_steel {
 
 class Updater;
@@ -17,8 +19,11 @@ public:
     Capture(int vid, int pid, int fd, Updater*);
     virtual ~Capture();
 
+    void run();
+
 private:
-    Updater* updater = nullptr;
+    Poco::Activity<Capture> _thread;
+    Updater* _updater = nullptr;
 };
 
 } /* namespace discarded_steel */
