@@ -20,7 +20,7 @@ public:
     Updater();
     virtual ~Updater();
 
-    virtual void update(int width, int height, const char* data) = 0;
+    virtual void update(int width, int height, const std::string& data) = 0;
 };
 
 } /* namespace discarded_steel */

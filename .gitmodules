@@ -1,3 +1,6 @@
 [submodule "cmake/Toolchains/android-cmake"]
 	path = cmake/Toolchains/android-cmake
 	url = https://github.com/taka-no-me/android-cmake.git
+[submodule "cmake/Gloomy-Dog"]
+	path = cmake/Gloomy-Dog
+	url = https://github.com/Ingener74/Gloomy-Dog.git
