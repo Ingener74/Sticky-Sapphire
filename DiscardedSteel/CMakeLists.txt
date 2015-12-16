@@ -7,5 +7,5 @@ set(DiscardedSteel_SOURCES
     src/Updater.cpp
 )
 
-add_library(DiscardedSteel SHARED ${DiscardedSteel_SOURCES})
+add_library(DiscardedSteel ${DiscardedSteel_SOURCES})
 target_link_libraries(DiscardedSteel usb uvc log android jnigraphics)

@@ -5,12 +5,17 @@
  *      Author: pavel
  */
 
+#include "DiscardedSteel/Updater.h"
 #include "DiscardedSteel/Capture.h"
 
 namespace discarded_steel {
 
 Capture::Capture(int vid, int pid, int fd, Updater* updater) :
-    updater(updater) {
+        updater(updater) {
+
+    if (updater)
+        updater->update(100, 100, "Test");
+
 }
 
 Capture::~Capture() {

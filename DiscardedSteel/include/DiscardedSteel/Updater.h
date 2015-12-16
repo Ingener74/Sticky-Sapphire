@@ -11,6 +11,7 @@
 #ifdef SWIG
     %feature("director") discarded_steel::Updater;
 #else
+    #include <string>
 #endif
 
 namespace discarded_steel {
