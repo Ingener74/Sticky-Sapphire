@@ -8,7 +8,11 @@
 #ifndef DISCARDEDSTEEL_INCLUDE_DISCARDEDSTEEL_CAPTURE_H_
 #define DISCARDEDSTEEL_INCLUDE_DISCARDEDSTEEL_CAPTURE_H_
 
-#include <Poco/Activity.h>
+#ifdef SWIG
+    %feature("director") discarded_steel::Updater;
+#else
+    #include <Poco/Activity.h>
+#endif
 
 namespace discarded_steel {
 
