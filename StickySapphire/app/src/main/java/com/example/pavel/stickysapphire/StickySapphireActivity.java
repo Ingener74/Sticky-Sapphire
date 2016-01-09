@@ -10,13 +10,14 @@ import org.wrenchrough.Updater;
 public class StickySapphireActivity extends AppCompatActivity {
 
     private Capture capture;
+    private Updater updater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sticky_sapphire);
 
-        Updater updater = new StickyUpdater();
+        updater = new StickyUpdater();
         capture = new Capture(100, 100, 0, updater);
     }
 
