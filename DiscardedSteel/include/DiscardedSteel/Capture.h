@@ -1,17 +1,9 @@
-/*
- * Capture.h
- *
- *  Created on: Dec 11, 2015
- *      Author: pavel
- */
-
-#ifndef DISCARDEDSTEEL_INCLUDE_DISCARDEDSTEEL_CAPTURE_H_
-#define DISCARDEDSTEEL_INCLUDE_DISCARDEDSTEEL_CAPTURE_H_
+#pragma once
 
 #ifdef SWIG
-    %feature("director") discarded_steel::Updater;
 #else
     #include <Poco/Activity.h>
+    #include <Poco/Condition.h>
 #endif
 
 namespace discarded_steel {
@@ -28,8 +20,9 @@ public:
 private:
     Poco::Activity<Capture> _thread;
     Updater* _updater = nullptr;
+
+    Poco::Mutex _mutex;
+    Poco::Condition _cond;
 };
 
-} /* namespace discarded_steel */
-
-#endif /* DISCARDEDSTEEL_INCLUDE_DISCARDEDSTEEL_CAPTURE_H_ */
+}

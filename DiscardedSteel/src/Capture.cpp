@@ -1,10 +1,3 @@
-/*
- * Capture.cpp
- *
- *  Created on: Dec 11, 2015
- *      Author: pavel
- */
-
 #include "DiscardedSteel/Updater.h"
 #include "DiscardedSteel/Capture.h"
 
@@ -18,17 +11,20 @@ Capture::Capture(int vid, int pid, int fd, Updater* updater) :
 }
 
 Capture::~Capture() {
+    _cond.broadcast();
+    _thread.stop();
+    _thread.wait();
 }
 
 void Capture::run() {
     while (_thread.isRunning()) {
         // do hard work ...
 
-        Thread::sleep(2000);
+        _cond.wait(_mutex, 2000);
 
         if (_updater)
             _updater->update(100, 100, "hard work result");
     }
 }
 
-} /* namespace discarded_steel */
+}

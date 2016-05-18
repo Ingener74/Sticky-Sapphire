@@ -1,12 +1,4 @@
-/*
- * Updater.h
- *
- *  Created on: Dec 11, 2015
- *      Author: pavel
- */
-
-#ifndef DISCARDEDSTEEL_INCLUDE_DISCARDEDSTEEL_UPDATER_H_
-#define DISCARDEDSTEEL_INCLUDE_DISCARDEDSTEEL_UPDATER_H_
+#pragma once
 
 #ifdef SWIG
     %feature("director") discarded_steel::Updater;
@@ -24,6 +16,4 @@ public:
     virtual void update(int width, int height, const std::string& data) = 0;
 };
 
-} /* namespace discarded_steel */
-
-#endif /* DISCARDEDSTEEL_INCLUDE_DISCARDEDSTEEL_UPDATER_H_ */
+}

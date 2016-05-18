@@ -26,3 +26,6 @@
 .settings
 bin/
 obj/
+
+.idea/
+StickySapphire/.idea/
