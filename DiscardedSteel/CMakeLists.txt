@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 
 set(DiscardedSteel_SOURCES
-    src/RgbImageViewer.cpp
-    src/UsbCameraViewer.cpp
+    # src/RgbImageViewer.cpp
+    # src/UsbCameraViewer.cpp
     src/Capture.cpp
     src/Updater.cpp
+    src/AndroidLogStreambuf.cpp
+    src/Uvc.cpp
 )
 
 add_library(DiscardedSteel ${DiscardedSteel_SOURCES})

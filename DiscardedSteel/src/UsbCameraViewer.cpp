@@ -20,7 +20,7 @@ using namespace std::placeholders;
  */
 
 template<typename Res, typename Arg>
-Res to_(Arg a)
+Res to_(Arg&& a)
 {
     stringstream _;
     _ << a;
@@ -34,39 +34,37 @@ class AndroidLogBuffer: public streambuf
 {
 public:
     AndroidLogBuffer(ostream& stream, android_LogPriority priority = ANDROID_LOG_DEBUG) :
-            streambuf(), _buffer(1024), _stream(stream), _orig(stream.rdbuf()), _priority(priority)
+            streambuf(), m_buffer(1 << 12), m_stream(stream), m_orig(stream.rdbuf()), m_priority(priority)
     {
-        setp(&_buffer.front(), &_buffer.back() + 1);
-        _stream.rdbuf(this);
+        setp(m_buffer.data(), m_buffer.data() + m_buffer.size());
+        m_stream.rdbuf(this);
     }
     virtual ~AndroidLogBuffer()
     {
-        _stream.rdbuf(_orig);
+        m_stream.rdbuf(m_orig);
     }
 
     virtual int sync()
     {
-        __android_log_print(_priority, "UsbCameraViewer", "%s", pbase());
-        pbump(-(pptr() - pbase()));
-        for (auto &b : _buffer)
-        {
+        __android_log_print(m_priority, "UsbCameraViewer", "%s", pbase());
+        setp(m_buffer.data(), m_buffer.data() + m_buffer.size());
+        for (auto &b : m_buffer)
             b = 0;
-        }
         return 0;
     }
 
 private:
-    vector<char> _buffer;
-    ostream& _stream;
-    streambuf* _orig = nullptr;
-    android_LogPriority _priority = ANDROID_LOG_DEBUG;
+    vector<char> m_buffer;
+    ostream& m_stream;
+    streambuf* m_orig = nullptr;
+    android_LogPriority m_priority = ANDROID_LOG_DEBUG;
 };
 
 /*
  * Data
  */
-shared_ptr<streambuf> error_buf, debug_buf;
-shared_ptr<RgbImageViewer> rgbImageViewer;
+unique_ptr<streambuf> error_buf, debug_buf;
+unique_ptr<RgbImageViewer> rgbImageViewer;
 
 thread firstThread, secondThread;
 
@@ -80,8 +78,8 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
     stopThread = false;
 
-    error_buf = make_shared<AndroidLogBuffer>(cerr, ANDROID_LOG_ERROR);
-    debug_buf = make_shared<AndroidLogBuffer>(cout);
+    error_buf.reset(new AndroidLogBuffer(cerr, ANDROID_LOG_ERROR));
+    debug_buf.reset(new AndroidLogBuffer(cout));
 
     cout << "JNI_OnLoad( vm = " << vm << ", reserved = " << reserved << " )" << endl;
     cout << "test cout" << endl;
@@ -137,7 +135,7 @@ public:
             uvc_exit(ctx);
     }
 
-    pair<bool, RgbImage> getImage()
+    pair<bool, discarded_steel::RgbImage> getImage()
     {
         uvc_frame* frame = nullptr;
 
@@ -160,7 +158,7 @@ public:
         if (uvc_any2rgb(frame, bgr.get()) < 0)
             throw runtime_error("can't convert any to bgr");
 
-        RgbImage newImage;
+        discarded_steel::RgbImage newImage;
         newImage.rows = bgr->height;
         newImage.cols = bgr->width;
         newImage.buffer = vector<uint8_t>(
@@ -210,7 +208,7 @@ jboolean Java_com_shnaider_usbcameraviewer_USBCameraViewer_startUsbCameraViewer(
         cout << "start usb camera with vid = " << vid << ", pid = " << pid << ", fd = " << fd << endl;
 
         cout << "create rgb image viewer" << endl;
-        rgbImageViewer = make_shared<RgbImageViewer>(jniEnv, self);
+        rgbImageViewer.reset(new RgbImageViewer(jniEnv, self));
 
         cout << "create control thread" << endl;
         firstThread = thread([=]()

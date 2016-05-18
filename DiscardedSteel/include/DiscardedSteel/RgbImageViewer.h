@@ -21,7 +21,7 @@ public:
     RgbImageViewer(JNIEnv * jniEnv, jobject object_self);
     virtual ~RgbImageViewer();
 
-    void drawRgbImage(RgbImage);
+    void drawRgbImage(discarded_steel::RgbImage);
 
 private:
     JavaVM *jvm = nullptr;

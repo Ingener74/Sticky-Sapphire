@@ -39,7 +39,7 @@ RgbImageViewer::~RgbImageViewer()
     cout << __PRETTY_FUNCTION__ << endl;
 }
 
-void RgbImageViewer::drawRgbImage( RgbImage rgbImage )
+void RgbImageViewer::drawRgbImage( discarded_steel::RgbImage rgbImage )
 {
     if (!rgbImage.cols || !rgbImage.rows || rgbImage.buffer.empty())
         throw runtime_error("image is empty");

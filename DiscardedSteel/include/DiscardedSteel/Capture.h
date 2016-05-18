@@ -2,13 +2,16 @@
 
 #ifdef SWIG
 #else
+    #include <memory>
     #include <Poco/Activity.h>
     #include <Poco/Condition.h>
 #endif
 
 namespace discarded_steel {
 
+class Uvc;
 class Updater;
+class AndroidLogStreambuf;
 
 class Capture {
 public:
@@ -18,11 +21,13 @@ public:
     void run();
 
 private:
-    Poco::Activity<Capture> _thread;
-    Updater* _updater = nullptr;
+    Poco::Activity<Capture> m_thread;
+    Updater* m_updater = nullptr;
 
-    Poco::Mutex _mutex;
-    Poco::Condition _cond;
+    int m_vid = -1, m_pid = -1, m_fd = -1;
+    std::unique_ptr<Uvc> m_uvc;
+
+    std::unique_ptr<AndroidLogStreambuf> m_cout, m_cerr;
 };
 
 }
