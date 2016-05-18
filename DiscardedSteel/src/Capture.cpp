@@ -13,7 +13,8 @@ Capture::Capture(int vid, int pid, int fd, Updater* updater) :
     m_thread(this, &Capture::run), m_updater(updater),
     m_cout(new AndroidLogStreambuf(cout)),
     m_cerr(new AndroidLogStreambuf(cerr, ANDROID_LOG_ERROR)) {
-    m_thread.start();
+    if(m_updater)
+        m_thread.start();
 }
 
 Capture::~Capture() {
